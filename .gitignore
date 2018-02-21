@@ -140,4 +140,4 @@ Thumbs.db
 
 #exclude the file Forecast_ALERTAER_login.sh so that the login data
 #is not accidentially transferred to github
-Forecast_ALERTAER_login.sh
+FtpCredentials.sh
