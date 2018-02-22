@@ -1,0 +1,19 @@
+# CAMS84 latest grid as of January 2018
+#
+gridtype = lonlat
+xname     = longitude
+xlongname = longitude
+xunits    = degrees_east
+yname     = latitude
+ylongname = latitude
+yunits    = degrees_north
+xfirst    = 0
+
+xsize    = 900
+ysize    = 451
+xinc     = 0.4
+xfirst   = 0
+yfirst   = 90
+yinc     = -0.4
+
+#cdo remapbil,mygrid ifile ofile
