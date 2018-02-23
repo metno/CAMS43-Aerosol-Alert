@@ -1,7 +1,15 @@
 #!/bin/bash
 
-#Since this will be called from cron, we need some paths here
-PATH="/home/jang/anaconda3/bin/:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+#check if the script is run by cron
+#you need to set the RUN_BY_CRON environment variable
+if [ -n ${RUN_BY_CRON} ]
+	then
+	PATH="/home/jang/anaconda3/bin/:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+fi
+
+#of jobs to run in parallel at max
+#e.g. for ncwa loops
+MaxParallelStarts=5
 
 CredentialFile='FtpCredentials.sh'
 if [ -f ${CredentialFile} ]
@@ -10,9 +18,10 @@ else
 	echo "Warning: Credential file ${CredentialFile} not found. You might not be able to download ftp data."
 fi
 Model='ECMWF_OSUITE_NRT'
+#for testing
+Model='ECMWF_OSUITE_NRT_test'
 ClimModel='ECMWF_FBOV'
 #used for testing
-#Model='ECMWF_OSUITE_NRT_PPI'
 
 #This is a list where each element is a variable to be worked on
 # the notation is
@@ -40,7 +49,6 @@ FCModelPath="${BasePath}aerocom1/${Model}/"
 #Data directory
 #By convention the model data resides in a directory named 'renamed'
 RenamedDir="${FCModelPath}renamed/"
-RenamedDir="${FCModelPath}renamed/test/"
 
 #for backward compatibility
 aerocom1="${FCModelPath}"
