@@ -52,9 +52,12 @@ for dir in `find ${InterpolateInDir} -mindepth 1 -maxdepth 1 -type d -newermt '3
 			echo "#of cdo running ${CdoNo}"
 			if [[ ${CdoNo} -gt 20 ]] # the ncpdq call limits this to at most ~ 8 at a time 
 				then
-				cdo -f nc4c -O -z zip_5 remapnn,${GridFile} ${UncompressedFile} ${ncoutfile}
+				#this makes the yearly file creation script using 6 times the time
+				#cdo -f nc4c -O -z zip_5 remapnn,${GridFile} ${UncompressedFile} ${ncoutfile}
+				cdo -f nc4c -O remapnn,${GridFile} ${UncompressedFile} ${ncoutfile}
 			else 
-				cdo -s -f nc4c -z zip_5 -O remapnn,${GridFile} ${UncompressedFile} ${ncoutfile} &
+				#cdo -s -f nc4c -z zip_5 -O remapnn,${GridFile} ${UncompressedFile} ${ncoutfile} &
+				cdo -s -f nc4c -O remapnn,${GridFile} ${UncompressedFile} ${ncoutfile} &
 			fi
 			#set +x
 			#echo ${UncompressedFile}
