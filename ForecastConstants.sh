@@ -26,6 +26,7 @@ ClimModel='ECMWF_FBOV'
 #This is a list where each element is a variable to be worked on
 # the notation is
 # <aerocom variable name>=<ECMWF variable name>=<alert variable name> or 'NotNeeded'
+# THE FIRST VARIABLE HAS TO BE od550aer!
 varlist=(
 'od550aer=aod550=alertaer'
 'od550dust=duaod550=alertdust'
@@ -130,10 +131,12 @@ if [ ${LeapYearFlag} -eq 0 ]
 	i_StartDay=(1 32 60 91 121 152 182 213 244 274 305 335)
 	i_EndDay=(31 60 90 120 151 181 212 243 273 304 334 365)
 	(( i_DayNo=365 ))
+	(( i_MaxDayNo=365 ))
 else MonthLengths=(31 29 31 30 31 30 31 31 30 31 30 31)
 	i_StartDay=(1 32 61 92 122 153 183 214 245 275 306 336)
 	i_EndDay=(31 60 91 121 152 182 213 244 274 305 335 366)
 	(( i_DayNo=366 ))
+	(( i_MaxDayNo=366 ))
 fi
 
 #echo "PATH: ${PATH}"
