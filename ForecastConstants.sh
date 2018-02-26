@@ -9,7 +9,7 @@ fi
 
 #of jobs to run in parallel at max
 #e.g. for ncwa loops
-MaxParallelStarts=5
+MaxParallelStarts=10
 
 CredentialFile='FtpCredentials.sh'
 if [ -f ${CredentialFile} ]
@@ -43,6 +43,7 @@ BasePath="/lustre/storeA/project/aerocom/"
 
 #Path of the climatology model
 ClimPath="${BasePath}/aerocom-users-database/ECMWF/${ClimModel}/"
+ClimRenamedDir="${ClimPath}/renamed/"
 #path of the forecast model
 FCModelPath="${BasePath}aerocom1/${Model}/"
 
