@@ -68,7 +68,7 @@ InterpolateInDir="${DownloadDir}"
 InterpolateOutDir="${FCModelPath}interpolated/"
 UnpackOutDir="${FCModelPath}unpacked/"
 #cdo grid file for the interpolation
-GridFile='/home/aerocom/bin/griddef_CAMS84.txt'
+GridFile='/home/aerocom/lib/CAMS43-Aerosol-Alert/CDOGridDefinition.txt'
 
 #forecast operations are logged so that we can look in case of errors
 LogDir="${FCModelPath}log/"
