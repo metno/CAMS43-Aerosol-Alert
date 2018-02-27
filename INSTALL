@@ -1,0 +1,18 @@
+system requirements:
+===================
+- multi core reasonably up to date Linux system (Met Norway: ubuntu ixenial, 40 cores, 128GB RAM)
+- storage of ~1.7 TB per year
+- bash 4
+- nco installed >= version 4.7 (earlier versions need small adjustments in the code; --trd switch)
+  recent versions can be installed from conda
+- cdo installed >= version 1.9 (earlier versions might work as well)
+  recent versions can be installed from conda
+
+TODO before the system will work:
+=================================
+
+- run CreateCredentials.sh
+- adjust paths in Constants.sh
+- edit file FtpCredentials.sh
+
+
