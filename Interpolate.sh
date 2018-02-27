@@ -1,6 +1,18 @@
 #!/bin/bash
-#shell script to create from the daily downloaded files in ../download
-#a yearly file
+#shell script to interpolate the data in the download directory to common grid
+#Because the netcdf files provided by ECMWF are packed with individual
+#packing parameters, every file has to be unpacked first. Otherwise nco would assume 
+#the same packing parameters for all files taken from the first file
+#
+#Because unpacking and interpolation takes quite some time. these files are cache
+#in the unpacked and interpolated directories
+#
+#to avoid simple errrors, the interpolation script looks through the data downloaded
+#the last three days if they exist in the unpacked and interpolated directories
+#
+#There are flags in Constants.sh to force the unpacking and interpolation to be redone
+#e.g. in case the output grid changes, but one has to adjust the search for the data 
+#script since even looking at all the files takes too long if it is done all the time.
 
 SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
@@ -8,9 +20,9 @@ IFS=$(echo -en "\n\b")
 #load constants
 set -x
 if [ -z ${CAMS43AlertHome} ]
-        then . /home/aerocom/bin/ForecastConstants.sh
+        then . /home/aerocom/bin/Constants.sh
 else
-        . "${CAMS43AlertHome}/ForecastConstants.sh"
+        . "${CAMS43AlertHome}/Constants.sh"
 fi
 set +x
 

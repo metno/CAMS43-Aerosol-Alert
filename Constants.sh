@@ -139,5 +139,9 @@ else MonthLengths=(31 29 31 30 31 30 31 31 30 31 30 31)
 	(( i_MaxDayNo=366 ))
 fi
 
+#The following flags are used to make swithing off of some parts
+#possible for testing
+StartDownloadFlag=0
+StartDownloadFlag=1
 #echo "PATH: ${PATH}"
 

@@ -8,9 +8,9 @@ IFS=$(echo -en "\n\b")
 #load constants
 set -x
 if [ -z ${CAMS43AlertHome} ]
-	then . /home/aerocom/bin/ForecastConstants.sh
+	then . /home/aerocom/bin/Constants.sh
 else
-	. "${CAMS43AlertHome}/ForecastConstants.sh"
+	. "${CAMS43AlertHome}/Constants.sh"
 fi
 set +x
 
