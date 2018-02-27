@@ -9,7 +9,7 @@ fi
 
 #of jobs to run in parallel at max
 #e.g. for ncwa loops
-MaxParallelStarts=10
+MaxParallelStarts=5
 
 CredentialFile='FtpCredentials.sh'
 if [ -f ${CredentialFile} ]
@@ -142,6 +142,27 @@ fi
 #The following flags are used to make swithing off of some parts
 #possible for testing
 StartDownloadFlag=0
-StartDownloadFlag=1
+#StartDownloadFlag=1
+
+#Start interpolation?
+StartInterpolationFlag=0
+#StartInterpolationFlag=1
+
+#Start climatology creation?
+StartDailyClimatologyFlag=0
+#StartDailyClimatologyFlag=1
+
+#Start data file creation?
+StartCreateYearlyFileFlag=0
+#StartCreateYearlyFileFlag=1
+
+#Start aler calculation?
+StartCalculateAlertFlag=0
+#StartCalculateAlertFlag=1
+
+#Start plotting using the aerocom-tools?
+StartAerocomToolsFlag=0
+#StartAerocomToolsFlag=1
 #echo "PATH: ${PATH}"
+
 
