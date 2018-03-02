@@ -7,11 +7,18 @@ if [ -n ${RUN_BY_CRON} ]
 	PATH="/home/jang/anaconda3/bin/:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 fi
 
+if [ -z ${CAMS43AlertHome} ]
+	then 
+	CAMS43AlertHome="/home/aerocom/bin/"
+fi
+
 #of jobs to run in parallel at max
 #e.g. for ncwa loops
 MaxParallelStarts=5
+#for gnu parallel
+SlotsToUse=16
 
-CredentialFile='FtpCredentials.sh'
+CredentialFile="${CAMS43AlertHome}/FtpCredentials.sh"
 if [ -f ${CredentialFile} ]
 	then . "${CredentialFile}"
 else
@@ -21,7 +28,6 @@ Model='ECMWF_OSUITE_NRT'
 #for testing
 Model='ECMWF_OSUITE_NRT_test'
 ClimModel='ECMWF_FBOV'
-#used for testing
 
 #This is a list where each element is a variable to be worked on
 # the notation is
@@ -142,11 +148,11 @@ fi
 #The following flags are used to make swithing off of some parts
 #possible for testing
 StartDownloadFlag=0
-#StartDownloadFlag=1
+StartDownloadFlag=1
 
 #Start interpolation?
 StartInterpolationFlag=0
-#StartInterpolationFlag=1
+StartInterpolationFlag=1
 
 #Start climatology creation?
 StartDailyClimatologyFlag=0
