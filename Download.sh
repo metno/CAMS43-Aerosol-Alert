@@ -22,9 +22,7 @@ echo "Downloading new files from ECMWF..."
 cd "${DownloadDir}"
 set -x
 logdate=`date +%Y%m%d%H%M%S`
-#logfile="${aerocom1}log/wgetlog_${logdate}"
-logfile="${FCModelPath}log/wgetlog_${logdate}"
-touch "${logfile}"
+logfile="${FCModelPath}log/Download_${logdate}"
 
 date=`date +%Y%m%d%H%M%S`
 echo "started at ${date}" >> "${logfile}"
