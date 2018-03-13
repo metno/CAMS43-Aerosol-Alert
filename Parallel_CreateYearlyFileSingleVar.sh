@@ -209,10 +209,11 @@ if [ ${Stage2Flag} -gt 0 ]
 		done
 		IFS=${OldIFS}
 	done
-	#sort the commands so to avoid working on the same file at the same time
+	#sort the commands reversely to avoid working on the same file at the same time
+	#and to make sure that the analysis data file is always used if it exists
 	echo Starting parallel for ncks...
 	WaitForFile "${ncksFile}"
-	sort "${ncksFile}" > "${SortTempFile}"
+	sort -r "${ncksFile}" > "${SortTempFile}"
 	WaitForFile "${SortTempFile}"
 	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${SortTempFile}"
 	#SAVEIFS=$IFS
