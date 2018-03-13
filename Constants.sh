@@ -154,26 +154,27 @@ fi
 
 #The following flags are used to make swithing off of some parts
 #possible for testing
-StartDownloadFlag=0
 StartDownloadFlag=1
+#StartDownloadFlag=0
 
 #Start interpolation?
-StartInterpolationFlag=0
 StartInterpolationFlag=1
+#StartInterpolationFlag=0
 
 #Start climatology creation?
+StartDailyClimatologyFlag=1
 StartDailyClimatologyFlag=0
-#StartDailyClimatologyFlag=1
 
 #Start data file creation?
-StartCreateYearlyFileFlag=0
-#StartCreateYearlyFileFlag=1
+StartCreateYearlyFileFlag=1
+#StartCreateYearlyFileFlag=0
 
 #Start aler calculation?
-StartCalculateAlertFlag=0
-#StartCalculateAlertFlag=1
+StartCalculateAlertFlag=1
+#StartCalculateAlertFlag=0
 
 #Start plotting using the aerocom-tools?
+AEROCOMWORKDIR=/home/jang/data/aerocom-tools/
 StartAerocomToolsFlag=0
 #StartAerocomToolsFlag=1
 #echo "PATH: ${PATH}"
