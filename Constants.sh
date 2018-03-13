@@ -4,7 +4,8 @@
 #you need to set the RUN_BY_CRON environment variable
 if [ -n ${RUN_BY_CRON} ]
 	then
-	PATH="/home/jang/anaconda3/bin/:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+	PATH="/modules/xenial/user-apps/aerocom/anaconda3-testing/bin/:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+	CAMS43AlertHome="/home/aerocom/lib/CAMS43-Aerosol-Alert/"
 fi
 
 if [ -z ${CAMS43AlertHome} ]
@@ -12,11 +13,14 @@ if [ -z ${CAMS43AlertHome} ]
 	CAMS43AlertHome="/home/aerocom/bin/"
 fi
 
+#in a cluster we need also the hostname for temporary files
+Hostname=`hostname`
+
 #of jobs to run in parallel at max
 #e.g. for ncwa loops
 MaxParallelStarts=5
 #for gnu parallel
-SlotsToUse=16
+SlotsToUse=8
 
 CredentialFile="${CAMS43AlertHome}/FtpCredentials.sh"
 if [ -f ${CredentialFile} ]
@@ -64,6 +68,9 @@ aerocom1="${FCModelPath}"
 #directory to download the files from ECMWF to
 DownloadDir="${FCModelPath}download/"
 
+#Cache directory for daily files
+DailyCacheDir="${FCModelPath}daily/"
+
 #for compatibility
 InterpolateInDir="${DownloadDir}"
 
@@ -99,7 +106,7 @@ ClimYear=9999
 StartYear=`find ${DownloadDir} -mindepth 1 -maxdepth 1 -type d | grep -e '/20' | sort | tail -n1 | rev | cut '-d/' -f1 | rev | cut -c1-4`
 
 #If you want to select the year manually, just use this:
-StartYear='2017'
+#StartYear='2017'
 
 
 #This finction returns 1 if a given year is a leap year
