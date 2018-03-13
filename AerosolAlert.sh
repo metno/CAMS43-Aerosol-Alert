@@ -88,7 +88,8 @@ if [ ${StartCreateYearlyFileFlag} -gt 0 ]
 	echo "${CAMS43AlertHome}/CreateYearlyFile.sh started at ${date}"
 	echo "logfile at ${logfile}" 
 	echo "started at ${date}" > "${logfile}"
-	${CAMS43AlertHome}/CreateYearlyFile.sh &>>${logfile}
+	${CAMS43AlertHome}/Parallel_CreateYearlyFile.sh &>>${logfile}
+	#${CAMS43AlertHome}/CreateYearlyFile.sh &>>${logfile}
 	date=`date +%Y%m%d%H%M%S`
 	echo "ended at ${date}" >> "${logfile}"
 fi
@@ -111,12 +112,10 @@ wait
 #start the aerocom-tools for plotting
 if [ ${StartAerocomToolsFlag} -gt 0 ]
 	then
-	#prep idl dcripts and start IDL afterwards
-	#That's the directory from where the aerocom-tools are run
-	AEROCOMWORKDIR=/home/jang/data/aerocomIDLBatch/
-	#Name of the batch file that will be called to start the aerocom tools
-	BatchJobFile="${AEROCOMWORKDIR}StartBatchForecast_ECMWF_osuite_NRT.sh"
-	${CAMS43AlertHome}/Forecast_StartIDL.sh 
+	#use the automation tools to start plotting
+	module add aerocom-IDL/8.5.1
+	module add aerocom/anaconda3-stable
+	/home/jang/bin/aerocom-tool-automation.py --modelyear ${StartYear} -v --forecast -v ${Model}
 fi
 
 IFS=$SAVEIFS
