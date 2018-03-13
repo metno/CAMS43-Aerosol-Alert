@@ -29,7 +29,7 @@ set +x
 
 #for dir in `find ${InterpolateInDir} -mindepth 1 -type d | grep -v 12$ | grep -v 00$ | grep -v test | grep -v interpolated | sort`
 #set -x
-for dir in `find ${InterpolateInDir} -mindepth 1 -maxdepth 1 -type d -newermt '3 days ago'| sort`
+for dir in `find ${InterpolateInDir} -mindepth 1 -maxdepth 1 -type d -newermt '5 days ago'| sort`
 #for dir in `find ${InterpolateInDir} -mindepth 1 -maxdepth 1 -type d | grep 201709 | sort`
 	do echo ${dir}
 	#OutDirLastPart=`echo ${dir} | cut -d/ -f 9`
