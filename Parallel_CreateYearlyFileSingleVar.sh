@@ -18,45 +18,74 @@ fi
 AerocomVar=${1}
 MaccVar=${2}
 
+function WaitForFile {
+	#wait up to 10 seconds for a file to appear
+	(( counter=0 ))
+	WaitFile="${1}"
+	while [ ! -f "${WaitFile}" ]
+		do echo "waiting for ${WaitFile} to appear ${counter}"
+		sleep 1
+		(( counter+=1 ))
+		if [ $counter -gt 10 ]
+			then return 1
+		fi
+	done
+	return 0
+}
 
 
 #load constants
 set -x
 echo ${CAMS43AlertHome}
 if [ -z ${CAMS43AlertHome} ]
-        then . /home/aerocom/bin/Constants.sh
+	then . /home/aerocom/bin/Constants.sh
 else
-        . "${CAMS43AlertHome}/Constants.sh"
+	. "${CAMS43AlertHome}/Constants.sh"
 fi
 #honour $NSLOTS from GridEngine
 if [ ! -z ${NSLOTS} ]
+	then
 	SlotsToUse=${NSLOTS}
 fi
 set +x
-#set -x
-NcwaFile="${TempDir}/ncwa_${MaccVar}_${StartYear}_$BASHPID.run"
-NcecatFile="${TempDir}/ncecat_${MaccVar}_${StartYear}_$BASHPID.run"
-rmfile="${TempDir}/remove_${MaccVar}_${StartYear}_$BASHPID.run"
-cdoFile="${TempDir}/cdo_${MaccVar}_${StartYear}_$BASHPID.run"
-ncksFile="${TempDir}/ncks_${MaccVar}_${StartYear}_$BASHPID.run"
-ncattedFile="${TempDir}/ncatted_${MaccVar}_${StartYear}_$BASHPID.run"
-ncap2File="${TempDir}/ncap2_${MaccVar}_${StartYear}_$BASHPID.run"
-ncwaLateFile="${TempDir}/ncwa_late_${MaccVar}_${StartYear}_$BASHPID.run"
+set -x
+UUID=`uuidgen`
+echo "PPID: $PPID"
+NcwaFile="${TempDir}/ncwa_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
+#NcwaFile="${TempDir}/ncwa_${MaccVar}_${StartYear}_$BASHPID.run"
+NcecatFile="${TempDir}/ncecat_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
+rmfile="${TempDir}/remove_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
+cdoFile="${TempDir}/cdo_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
+ncksFile="${TempDir}/ncks_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
+ncattedFile="${TempDir}/ncatted_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
+ncap2File="${TempDir}/ncap2_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
+ncwaLateFile="${TempDir}/ncwa_late_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
+set +x
+
+NCWA=`which ncwa`
+NCECAT=`which ncecat`
+CDO=`which cdo`
+NCKS_=`which ncks`
+NCATTED=`which ncatted`
+NCAP2=`which ncap2`
+
+SortTempFile="${TempDir}/sort_${UUID}.tmp"
 
 rm -f ${NcwaFile} ${NcecatFile} ${rmfile} ${cdoFile} ${ncksFile} ${ncattedFile} ${ncap2File} ${ncwaLateFile}
 
 #Fill ncwa.run and ncecat.run
 
+#different stages to divide script in parts for testing
 Stage1Flag=1
 Stage2Flag=1
 Stage3Flag=1
-RemoveFlag=0
+RemoveFlag=1
 
 if [ ${Stage1Flag} -gt 0 ]
 	then
 	declare -a NcwaList NcecatList cdoList
 	for DayDirs in `find ${InterpolateOutDir} -mindepth 1 -maxdepth 1 -type d | grep -e ${StartYear} | grep  -v 12$ | sort`
-	#for DayDirs in `find ${InterpolateOutDir} -mindepth 1 -maxdepth 1 -type d | grep -e "${StartYear}0101" | grep  -v 12$ | sort`
+	#for DayDirs in `find ${InterpolateOutDir} -mindepth 1 -maxdepth 1 -type d | grep -e "${StartYear}010[1-2]" | grep  -v 12$ | sort`
 	#for DayDirs in `find ../test -mindepth 1 -maxdepth 1 -type d | grep -e ${StartYear} | grep  -v 12$ | sort`
 		do echo ${DayDirs}
 		FileDayString=`echo ${DayDirs} | rev | cut -d/ -f1 | rev | cut -c1-8`
@@ -82,7 +111,7 @@ if [ ${Stage1Flag} -gt 0 ]
 				newfile="${TempDir}/${FileDayString}_${MaccVar}_${FileHour}.nc"
 				echo ${newfile} >> "${rmfile}"
 				#get rid of the time dimension and put the file in tempdir
-				echo "ncwa -7 -a time -O -o ${newfile} ${DayFile}" >> ${NcwaFile}
+				echo "ncwa -7 -a time -O -o ${newfile} ${DayFile}" >> "${NcwaFile}"
 				NcwaList+=("ncwa -7 -a time -O -o ${newfile} ${DayFile}")
 			done
 			#put the whole forecast period in one file so that we can use cdo for daily mean calculation
@@ -99,32 +128,36 @@ if [ ${Stage1Flag} -gt 0 ]
 			cdoList+=("cdo -f nc4c -O daymean ${HourlyFile} ${DailyFile}")
 		fi
 	done
+
+	set -x
+	WaitForFile "${NcwaFile}"
 	echo Starting parallel for ncwa...
-	printf "%s\n" "${NcwaList[@]}" | parallel -j ${SlotsToUse} -v
+	/usr/bin/parallel --version
+	#printf "%s\n" "${NcwaList[@]}" | /usr/bin/parallel --verbose -j ${SlotsToUse}
+	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${NcwaFile}"
+	set +x
 	wait
 
+	WaitForFile "${NcecatFile}"
 	echo Starting parallel for ncecat...
-	printf "%s\n" "${NcecatList[@]}" | parallel -j ${SlotsToUse} -v
+	#printf "%s\n" "${NcecatList[@]}" | parallel -j ${SlotsToUse} -v
+	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${NcecatFile}"
 	wait
 
+	WaitForFile "${cdoFile}"
 	echo Starting parallel for cdo...
-	printf "%s\n" "${cdoList[@]}" | parallel -j ${SlotsToUse} -v
+	#printf "%s\n" "${cdoList[@]}" | parallel -j ${SlotsToUse} -v
+	#/usr/bin/parallel --verbose -j ${SlotsToUse} < "${cdoFile}"
+	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${cdoFile}"
 	wait
 
 	unset NcwaList NcecatList cdoList
 
 	rm -f ${TempDir}/${StartYear}*_${MaccVar}_???.nc
 	rm -f ${TempDir}/${StartYear}*_${MaccVar}_hourly.nc
-	#echo Starting parallel -a ${NcwaFile}...
-	#parallel -a ${NcwaFile} -v 
-	#wait
-	#echo Starting parallel -a ${NcecatFile}...
-	#parallel -a ${NcecatFile} -v 
-	#wait
-	#echo Starting parallel -a ${cdoFile}...
-	#parallel -a ${cdoFile} -v 
-	#wait
 fi
+
+######################################################################
 
 if [ ${Stage2Flag} -gt 0 ]
 	then
@@ -178,32 +211,48 @@ if [ ${Stage2Flag} -gt 0 ]
 	done
 	#sort the commands so to avoid working on the same file at the same time
 	echo Starting parallel for ncks...
-	SAVEIFS=$IFS
-	IFS=$'\n' ncksList=($(sort <<<"${ncksList[*]}"))
-	IFS=$SAVEIFS
-	( printf "%s\n" "${ncksList[@]}" | parallel -j ${SlotsToUse} -v ; wait )
+	WaitForFile "${ncksFile}"
+	sort "${ncksFile}" > "${SortTempFile}"
+	WaitForFile "${SortTempFile}"
+	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${SortTempFile}"
+	#SAVEIFS=$IFS
+	#IFS=$'\n' ncksList=($(sort <<<"${ncksList[*]}"))
+	#IFS=$SAVEIFS
+	#( printf "%s\n" "${ncksList[@]}" | parallel -j ${SlotsToUse} -v ; wait )
 	wait
 
 	#remove duplicates in the command list to save time
 	echo Starting parallel for ncatted...
-	SAVEIFS=$IFS
-	IFS=$'\n' ncattedList=($(sort -u <<<"${ncattedList[*]}"))
-	IFS=$SAVEIFS
-	( printf "%s\n" "${ncattedList[@]}" | parallel -j ${SlotsToUse} -v ; wait )
+	WaitForFile "${ncattedFile}"
+	sort -u "${ncattedFile}" > "${SortTempFile}"
+	WaitForFile "${SortTempFile}"
+	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${SortTempFile}"
+	#SAVEIFS=$IFS
+	#IFS=$'\n' ncattedList=($(sort -u <<<"${ncattedList[*]}"))
+	#IFS=$SAVEIFS
+	#( printf "%s\n" "${ncattedList[@]}" | parallel -j ${SlotsToUse} -v ; wait )
 	wait
 
 	echo Starting parallel for ncap2...
-	SAVEIFS=$IFS
-	IFS=$'\n' ncap2List=($(sort -u <<<"${ncap2List[*]}"))
-	IFS=$SAVEIFS
-	( printf "%s\n" "${ncap2List[@]}" | parallel -j ${SlotsToUse} -v ; wait )
+	WaitForFile "${ncap2File}"
+	sort -u "${ncap2File}" > "${SortTempFile}"
+	WaitForFile "${SortTempFile}"
+	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${SortTempFile}"
+	#SAVEIFS=$IFS
+	#IFS=$'\n' ncap2List=($(sort -u <<<"${ncap2List[*]}"))
+	#IFS=$SAVEIFS
+	#( printf "%s\n" "${ncap2List[@]}" | parallel -j ${SlotsToUse} -v ; wait )
 	wait
 
 	echo Starting parallel for ncwa...
-	SAVEIFS=$IFS
-	IFS=$'\n' ncwaLateList=($(sort -u <<<"${ncwaLateList[*]}"))
-	IFS=$SAVEIFS
-	( printf "%s\n" "${ncwaLateList[@]}" | parallel -j ${SlotsToUse} -v ; wait )
+	WaitForFile "${ncwaLateFile}"
+	sort -u "${ncwaLateFile}" > "${SortTempFile}"
+	WaitForFile "${SortTempFile}"
+	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${SortTempFile}"
+	#SAVEIFS=$IFS
+	#IFS=$'\n' ncwaLateList=($(sort -u <<<"${ncwaLateList[*]}"))
+	#IFS=$SAVEIFS
+	#( printf "%s\n" "${ncwaLateList[@]}" | parallel -j ${SlotsToUse} -v ; wait )
 	wait
 	unset  ncksList ncattedList ncap2List ncwaLateList
 fi
@@ -224,7 +273,8 @@ if [ ${Stage3Flag} -gt 0 ]
 	#FillValue=`ncks -m -v ${MaccVar} ${prototype} | grep ${MaccVar} | grep _FillValue | cut '-d ' -f 11`
 	FillValue=`${NCKS[*]} -m -v ${MaccVar} ${prototype} | grep ${MaccVar} | grep _FillValue | cut '-d ' -f 11`
 	#temp="${MaccVar}(:,:)=${FillValue}"
-	temp="${MaccVar}(:,:)=0./0."
+	#temp="${MaccVar}(:,:)=0./0."
+	temp="${MaccVar}(:,:)=nan"
 	set -x
 	ncap2 -7 -o ${prototype} -O -s "${temp}" ${prototype}
 	if [ $? -ne 0 ]
@@ -260,8 +310,6 @@ if [ ${Stage3Flag} -gt 0 ]
 	set -x
 	OutFile="${TempDir}/${Start}.${Model}.daily.${AerocomVar}.${StartYear}.nc"
 	StartFile="${TempDir}/TS_${MaccVar}_00001.nc"
-	#ncecat -4 -L 5 -O -u time -n ${i_DayNo},5,1 ${StartFile} ${OutFile}
-	#ncecat -7 -O -u time -n ${i_DayNo},5,1 ${StartFile} ${OutFile}
 	ncecat -7 -x -v time_bnds -O -u time -n ${i_DayNo},5,1 ${StartFile} ${OutFile}
 	if [ $? -ne 0 ]
 		then exit 1
@@ -278,27 +326,24 @@ if [ ${Stage3Flag} -gt 0 ]
 		#then exit 1
 	#fi
 	#set +x
-	#rm -f TS_*.nc Day_*.nc ${prototype} ${TempDir}/*.nc
 	mv "${OutFile}" "${RenamedDir}"
 
 fi
 
+#################################################################################################
+
 if [ ${RemoveFlag} -gt 0 ]
 	then
-
-	set -x
 	rm -f ${TempDir}/TS_${MaccVar}*.nc 
 	rm -f ${TempDir}/Day_${MaccVar}*.nc 
 	rm -f ${TempDir}/${prototype} 
 	rm -f ${TempDir}/${StartYear}*_${MaccVar}_???.nc
 	rm -f ${TempDir}/${StartYear}*_${MaccVar}_daily.nc
-	rm -f ${NcwaFile} ${NcecatFile} ${rmfile} ${cdoFile} ${ncksFile} ${ncattedFile} ${ncap2File} ${ncwaLateFile}
-	set +x	
+	rm -f ${NcwaFile} ${NcecatFile} ${rmfile} ${cdoFile} ${ncksFile} ${ncattedFile} ${ncap2File} ${ncwaLateFile} ${SortTempFile}
 fi	
-
 
 date=`date`
 echo "$*" finished at ${date}
 
 IFS=$SAVEIFS
-
+exit 0
