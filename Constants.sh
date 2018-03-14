@@ -22,6 +22,11 @@ MaxParallelStarts=5
 #for gnu parallel
 SlotsToUse=8
 
+#in some scripts we search only a certain number of days back for new data
+#(e.g. in Interpolate.sh) to save time
+#this is the number of days to search back
+MaxDaysToSearchForData=3
+
 CredentialFile="${CAMS43AlertHome}/FtpCredentials.sh"
 if [ -f ${CredentialFile} ]
 	then . "${CredentialFile}"
@@ -30,7 +35,7 @@ else
 fi
 Model='ECMWF_OSUITE_NRT'
 #for testing
-Model='ECMWF_OSUITE_NRT_test'
+#Model='ECMWF_OSUITE_NRT_test'
 ClimModel='ECMWF_FBOV'
 
 #This is a list where each element is a variable to be worked on
@@ -169,6 +174,10 @@ StartDailyClimatologyFlag=0
 StartCreateYearlyFileFlag=1
 #StartCreateYearlyFileFlag=0
 
+#use caching for data file creation?
+EnableDataCachingFlag=1
+#EnableDataCachingFlag=0
+
 #Start aler calculation?
 StartCalculateAlertFlag=1
 #StartCalculateAlertFlag=0
@@ -176,7 +185,7 @@ StartCalculateAlertFlag=1
 #Start plotting using the aerocom-tools?
 AEROCOMWORKDIR=/home/jang/data/aerocom-tools/
 StartAerocomToolsFlag=0
-#StartAerocomToolsFlag=1
+StartAerocomToolsFlag=1
 #echo "PATH: ${PATH}"
 
 
