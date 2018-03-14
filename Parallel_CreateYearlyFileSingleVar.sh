@@ -1,6 +1,7 @@
 #!/bin/bash
-#shell script to create text files with commands to run
-#for the usage with gnu parallel
+#CAMS43 aerosol forecast
+#shell script to create yearly files for one variable using parallelism
+#through the usage of gnu parallel
 #
 #as basis the files found in ${InterpolateOutDir} are used
 #wich have been inperpolated to a common grid
@@ -8,7 +9,7 @@
 #The output is the a yearly file for each variable
 
 SAVEIFS=$IFS
-IFS=$(echo -en "\n\b")
+#IFS=$(echo -en "\n\b")
 
 if [ $# -lt 2 ]
 	then echo "usage: ${0} <AerocomVar> <MaccVar>"
@@ -33,6 +34,8 @@ function WaitForFile {
 	return 0
 }
 
+date=`date`
+echo "$*" started at ${date}
 
 #load constants
 set -x
@@ -52,14 +55,15 @@ set -x
 UUID=`uuidgen`
 echo "PPID: $PPID"
 NcwaFile="${TempDir}/ncwa_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
-#NcwaFile="${TempDir}/ncwa_${MaccVar}_${StartYear}_$BASHPID.run"
 NcecatFile="${TempDir}/ncecat_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
-rmfile="${TempDir}/remove_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
+#rmfile="${TempDir}/remove_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
 cdoFile="${TempDir}/cdo_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
 ncksFile="${TempDir}/ncks_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
 ncattedFile="${TempDir}/ncatted_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
 ncap2File="${TempDir}/ncap2_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
+ncap2LateFile="${TempDir}/ncap2Late_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
 ncwaLateFile="${TempDir}/ncwa_late_${MaccVar}_${StartYear}_${UUID}_${Hostname}.run"
+
 set +x
 
 NCWA=`which ncwa`
@@ -71,9 +75,7 @@ NCAP2=`which ncap2`
 
 SortTempFile="${TempDir}/sort_${UUID}.tmp"
 
-rm -f ${NcwaFile} ${NcecatFile} ${rmfile} ${cdoFile} ${ncksFile} ${ncattedFile} ${ncap2File} ${ncwaLateFile}
-
-#Fill ncwa.run and ncecat.run
+rm -f ${NcwaFile} ${NcecatFile}  ${cdoFile} ${ncksFile} ${ncattedFile} ${ncap2File} ${ncwaLateFile}
 
 #different stages to divide script in parts for testing
 Stage1Flag=1
@@ -81,23 +83,32 @@ Stage2Flag=1
 Stage3Flag=1
 RemoveFlag=1
 
+SortTempFile="${DailyCacheDir}/sort_${MaccVar}_${StartYear}_${UUID}_${Hostname}.tmp"
+
 if [ ${Stage1Flag} -gt 0 ]
 	then
 	declare -a NcwaList NcecatList cdoList
-	for DayDirs in `find ${InterpolateOutDir} -mindepth 1 -maxdepth 1 -type d | grep -e ${StartYear} | grep  -v 12$ | sort`
+	if [ ${EnableDataCachingFlag} -eq 0 ] #caching is disabled
+		then 
+		DirsToWorkOn=(`find ${InterpolateOutDir} -mindepth 1 -maxdepth 1 -type d | grep -e ${StartYear} | grep  -v 12$ | sort`)
+	else
+		DirsToWorkOn=(`find ${InterpolateOutDir} -mindepth 1 -maxdepth 1 -type d -newermt "${MaxDaysToSearchForData} days ago"| sort`)
+	fi
 	#for DayDirs in `find ${InterpolateOutDir} -mindepth 1 -maxdepth 1 -type d | grep -e "${StartYear}010[1-2]" | grep  -v 12$ | sort`
-	#for DayDirs in `find ../test -mindepth 1 -maxdepth 1 -type d | grep -e ${StartYear} | grep  -v 12$ | sort`
+	for DayDirs in ${DirsToWorkOn[@]}
 		do echo ${DayDirs}
 		FileDayString=`echo ${DayDirs} | rev | cut -d/ -f1 | rev | cut -c1-8`
 		#put the whole forecast period in one file so that we can use cdo for daily mean calculation
-		HourlyFile="${TempDir}/${FileDayString}_${MaccVar}_hourly.nc"
-		DailyFile="${TempDir}/${FileDayString}_${MaccVar}_daily.nc"
-		echo ${HourlyFile} >> "${rmfile}"
-		echo ${DailyFile} >> "${rmfile}"
+		HourlyFile="${DailyCacheDir}/${FileDayString}_${MaccVar}_hourly.nc"
+		DailyFile="${DailyCacheDir}/${FileDayString}_${MaccVar}_daily.nc"
+		#echo ${HourlyFile} >> "${rmfile}"
+		#echo ${DailyFile} >> "${rmfile}"
 		#test if  ${DailyFile} exists. If yes, don't recreate it to save time
 		#ERRORPRONE!
+		FileFoundFlag=0
 		if [[ ! -f ${DailyFile} ]]
 			then
+			FileFoundFlag=1
 			DayFileArr=`find ${DayDirs}/ -name z_cams_c_*_${StartYear}*_fc_*_${MaccVar}.nc -print | sort`
 			if [[ ! -n ${DayFileArr} ]]
 				then echo "no files in directory ${DayDirs} found!"
@@ -108,20 +119,20 @@ if [ ${Stage1Flag} -gt 0 ]
 				do #echo ${DayFile}
 				FileHour=`basename ${DayFile} | cut -d_ -f9`
 				FileDayString=`basename ${DayFile} | cut -d_ -f5 | cut -c1-8`
-				newfile="${TempDir}/${FileDayString}_${MaccVar}_${FileHour}.nc"
-				echo ${newfile} >> "${rmfile}"
-				#get rid of the time dimension and put the file in tempdir
+				newfile="${DailyCacheDir}/${FileDayString}_${MaccVar}_${FileHour}.nc"
+				#echo ${newfile} >> "${rmfile}"
+				#get rid of the time dimension and put the file in DailyCacheDir
 				echo "ncwa -7 -a time -O -o ${newfile} ${DayFile}" >> "${NcwaFile}"
 				NcwaList+=("ncwa -7 -a time -O -o ${newfile} ${DayFile}")
 			done
 			#put the whole forecast period in one file so that we can use cdo for daily mean calculation
-			#HourlyFile="${TempDir}/${FileDayString}_hourly.nc"
-			#DailyFile="${TempDir}/${FileDayString}_daily.nc"
-			#ncecat -O -u time -n 121,3,1 ${TempDir}/${FileDayString}_*.nc ${HourlyFile}
+			#HourlyFile="${DailyCacheDir}/${FileDayString}_hourly.nc"
+			#DailyFile="${DailyCacheDir}/${FileDayString}_daily.nc"
+			#ncecat -O -u time -n 121,3,1 ${DailyCacheDir}/${FileDayString}_*.nc ${HourlyFile}
 			#THERE MIGHT NOT ALWAYS BE 121 TIME STEPS TO WORK ON
 			#MAYBE CONSIDER THAT?
-			echo "ncecat -7 -O -u time -n 121,3,1 ${TempDir}/${FileDayString}_${MaccVar}_???.nc ${HourlyFile}" >> "${NcecatFile}"
-			NcecatList+=("ncecat -7 -O -u time -n 121,3,1 ${TempDir}/${FileDayString}_${MaccVar}_???.nc ${HourlyFile}")
+			echo "ncecat -7 -O -u time -n 121,3,1 ${DailyCacheDir}/${FileDayString}_${MaccVar}_???.nc ${HourlyFile}" >> "${NcecatFile}"
+			NcecatList+=("ncecat -7 -O -u time -n 121,3,1 ${DailyCacheDir}/${FileDayString}_${MaccVar}_???.nc ${HourlyFile}")
 			#set +x
 			#calculate daily mean using cdo
 			echo "cdo -f nc4c -O daymean ${HourlyFile} ${DailyFile}" >> "${cdoFile}"
@@ -129,46 +140,53 @@ if [ ${Stage1Flag} -gt 0 ]
 		fi
 	done
 
-	set -x
-	WaitForFile "${NcwaFile}"
-	echo Starting parallel for ncwa...
-	/usr/bin/parallel --version
-	#printf "%s\n" "${NcwaList[@]}" | /usr/bin/parallel --verbose -j ${SlotsToUse}
-	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${NcwaFile}"
-	set +x
-	wait
+	if [ ${FileFoundFlag} -gt 0 ]
+		then
+		set -x
+		WaitForFile "${NcwaFile}"
+		echo Starting parallel for ncwa...
+		/usr/bin/parallel --version
+		#printf "%s\n" "${NcwaList[@]}" | /usr/bin/parallel --verbose -j ${SlotsToUse}
+		/usr/bin/parallel -vk -j ${SlotsToUse} -a "${NcwaFile}"
+		set +x
+		wait
 
-	WaitForFile "${NcecatFile}"
-	echo Starting parallel for ncecat...
-	#printf "%s\n" "${NcecatList[@]}" | parallel -j ${SlotsToUse} -v
-	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${NcecatFile}"
-	wait
+		WaitForFile "${NcecatFile}"
+		echo Starting parallel for ncecat...
+		#printf "%s\n" "${NcecatList[@]}" | parallel -j ${SlotsToUse} -v
+		/usr/bin/parallel -vk -j ${SlotsToUse} -a "${NcecatFile}"
+		wait
 
-	WaitForFile "${cdoFile}"
-	echo Starting parallel for cdo...
-	#printf "%s\n" "${cdoList[@]}" | parallel -j ${SlotsToUse} -v
-	#/usr/bin/parallel --verbose -j ${SlotsToUse} < "${cdoFile}"
-	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${cdoFile}"
-	wait
+		WaitForFile "${cdoFile}"
+		echo Starting parallel for cdo...
+		#printf "%s\n" "${cdoList[@]}" | parallel -j ${SlotsToUse} -v
+		#/usr/bin/parallel --verbose -j ${SlotsToUse} < "${cdoFile}"
+		/usr/bin/parallel -vk -j ${SlotsToUse} -a "${cdoFile}"
+		wait
 
-	unset NcwaList NcecatList cdoList
+		unset NcwaList NcecatList cdoList
+	fi
 
-	rm -f ${TempDir}/${StartYear}*_${MaccVar}_???.nc
-	rm -f ${TempDir}/${StartYear}*_${MaccVar}_hourly.nc
+	rm -f ${DailyCacheDir}/${StartYear}*_${MaccVar}_???.nc
+	rm -f ${DailyCacheDir}/${StartYear}*_${MaccVar}_hourly.nc
 fi
 
 ######################################################################
 
 if [ ${Stage2Flag} -gt 0 ]
 	then
+	#set -x
 	declare -a ncksList ncattedList ncap2List ncwaLateList
-	for DayDirs in `find ${InterpolateOutDir} -mindepth 1 -maxdepth 1 -type d | grep -e ${StartYear} | grep  -v 12$ | sort`
+	#for DayDirs in `find ${InterpolateOutDir} -mindepth 1 -maxdepth 1 -type d | grep -e ${StartYear} | grep  -v 12$ | sort`
 	#for DayDirs in `find ${InterpolateOutDir} -mindepth 1 -maxdepth 1 -type d | grep -e "${StartYear}0101" | grep  -v 12$ | sort`
-	#for DayDirs in `find ../test -mindepth 1 -maxdepth 1 -type d | grep -e ${StartYear} | grep  -v 12$ | sort`
-		do echo ${DayDirs}
-		FileDayString=`echo ${DayDirs} | rev | cut -d/ -f1 | rev | cut -c1-8`
+	for DailyFile in `find ${DailyCacheDir} -type f -name "*_${MaccVar}_daily.nc" -newermt "${MaxDaysToSearchForData} days ago"| sort`
+		do echo ${DailyFile}
+		#echo ${DayDirs}
+		FileDayString=`basename ${DailyFile} | cut -d_ -f1 `
+		
+		#FileDayString=`echo ${DayDirs} | rev | cut -d/ -f1 | rev | cut -c1-8`
 		#put the whole forecast period in one file so that we can use cdo for daily mean calculation
-		DailyFile="${TempDir}/${FileDayString}_${MaccVar}_daily.nc"
+		#DailyFile="${TempDir}/${FileDayString}_${MaccVar}_daily.nc"
 		#now rip the DailyFile apart to make a yearly time series
 		(( StartTimeStep=1 ))
 		(( EndTimeStep=${StartTimeStep}+1 ))
@@ -188,7 +206,7 @@ if [ ${Stage2Flag} -gt 0 ]
 			do echo ${c_Temp}
 			datestring=`echo ${c_Temp} | cut -dT -f1`
 			DOY=`date -d ${datestring} '+%j'`
-			DayFile="${TempDir}/Day_${MaccVar}_${DOY}.nc"
+			DayFile="${DailyCacheDir}/Day_${StartYear}_${MaccVar}_${DOY}.nc"
 			#ncks -4 -L 5 -F -O -d time,${StartTimeStep},${StartTimeStep} ${DailyFile} ${DayFile}
 			echo "ncks -7 -F -O -d time,${StartTimeStep} ${DailyFile} ${DayFile}" >> "${ncksFile}"
 			ncksList+=("ncks -7 -F -O -d time,${StartTimeStep} ${DailyFile} ${DayFile}")
@@ -209,13 +227,15 @@ if [ ${Stage2Flag} -gt 0 ]
 		done
 		IFS=${OldIFS}
 	done
+	echo "${ncksFile}"
 	#sort the commands reversely to avoid working on the same file at the same time
 	#and to make sure that the analysis data file is always used if it exists
 	echo Starting parallel for ncks...
 	WaitForFile "${ncksFile}"
 	sort -r "${ncksFile}" > "${SortTempFile}"
 	WaitForFile "${SortTempFile}"
-	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${SortTempFile}"
+	mv "${SortTempFile}" "${ncksFile}"
+	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${ncksFile}"
 	#SAVEIFS=$IFS
 	#IFS=$'\n' ncksList=($(sort <<<"${ncksList[*]}"))
 	#IFS=$SAVEIFS
@@ -228,10 +248,6 @@ if [ ${Stage2Flag} -gt 0 ]
 	sort -u "${ncattedFile}" > "${SortTempFile}"
 	WaitForFile "${SortTempFile}"
 	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${SortTempFile}"
-	#SAVEIFS=$IFS
-	#IFS=$'\n' ncattedList=($(sort -u <<<"${ncattedList[*]}"))
-	#IFS=$SAVEIFS
-	#( printf "%s\n" "${ncattedList[@]}" | parallel -j ${SlotsToUse} -v ; wait )
 	wait
 
 	echo Starting parallel for ncap2...
@@ -239,10 +255,6 @@ if [ ${Stage2Flag} -gt 0 ]
 	sort -u "${ncap2File}" > "${SortTempFile}"
 	WaitForFile "${SortTempFile}"
 	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${SortTempFile}"
-	#SAVEIFS=$IFS
-	#IFS=$'\n' ncap2List=($(sort -u <<<"${ncap2List[*]}"))
-	#IFS=$SAVEIFS
-	#( printf "%s\n" "${ncap2List[@]}" | parallel -j ${SlotsToUse} -v ; wait )
 	wait
 
 	echo Starting parallel for ncwa...
@@ -250,10 +262,6 @@ if [ ${Stage2Flag} -gt 0 ]
 	sort -u "${ncwaLateFile}" > "${SortTempFile}"
 	WaitForFile "${SortTempFile}"
 	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${SortTempFile}"
-	#SAVEIFS=$IFS
-	#IFS=$'\n' ncwaLateList=($(sort -u <<<"${ncwaLateList[*]}"))
-	#IFS=$SAVEIFS
-	#( printf "%s\n" "${ncwaLateList[@]}" | parallel -j ${SlotsToUse} -v ; wait )
 	wait
 	unset  ncksList ncattedList ncap2List ncwaLateList
 fi
@@ -261,13 +269,12 @@ fi
 if [ ${Stage3Flag} -gt 0 ] 
 	then	
 
+	set +x
 	#Now fill the gaps with a prototype containing only NaNs
 	#Create prototype
 	echo "Preparing prototype to be used for non existing days..."
-	#OrigDir=`pwd`
-	cd "${TempDir}"
-	prototype="prototype_${MaccVar}.nc"
-	DayFile=`find -type f -name "Day_${MaccVar}*.nc" | head -n1`
+	prototype="${TempDir}/prototype_${StartYear}_${MaccVar}.nc"
+	DayFile=`find ${DailyCacheDir} -type f -name "Day_${StartYear}_${MaccVar}*.nc" | head -n1`
 	
 	cp ${DayFile} ${prototype}
 	#determine Fillvalue
@@ -281,23 +288,23 @@ if [ ${Stage3Flag} -gt 0 ]
 	if [ $? -ne 0 ]
 		then exit 1
 	fi
-	set +x
 
 	#fill the gaps with the Prototype and the right time value
 	for ((i=1; i <=i_DayNo; i += 1))
 		do	c_OutFileNo=`printf "%05d" ${i}`
 		c_InFileNo=`printf "%03d" ${i}`
-		InFile="Day_${MaccVar}_${c_InFileNo}.nc"
-		OutFile="TS_${MaccVar}_${c_OutFileNo}.nc"
+		InFile="${DailyCacheDir}/Day_${StartYear}_${MaccVar}_${c_InFileNo}.nc"
+		OutFile="${TempDir}/TS_${MaccVar}_${c_OutFileNo}.nc"
 		if [ ! -f "${InFile}" ]
 			then 
 			#cp ${prototype} ${OutFile}
 			temp="time=${i}-1"
 			set -x
-			ncap2 -7 -o ${OutFile} -O -s "${temp}" ${prototype}
-			if [ $? -ne 0 ]
-				then exit 1
-			fi
+			echo "ncap2 -7 -o ${OutFile} -O -s "${temp}" ${prototype}" >> "${ncap2LateFile}"
+			#ncap2 -7 -o ${OutFile} -O -s "${temp}" ${prototype}
+			#if [ $? -ne 0 ]
+				#then exit 1
+			#fi
 			set +x
 		else 
 			set -x
@@ -305,7 +312,10 @@ if [ ${Stage3Flag} -gt 0 ]
 			set +x
 		fi
 	done
-	cd "${RenamedDir}"
+	echo Starting parallel for ncap2Late...
+	WaitForFile "${ncap2LateFile}"
+	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${ncap2LateFile}"
+	wait
 
 	#concatenate to yearly file
 	set -x
@@ -315,18 +325,8 @@ if [ ${Stage3Flag} -gt 0 ]
 	if [ $? -ne 0 ]
 		then exit 1
 	fi
-	#until netcdf version 4.3.3.1 (March, 2015) the following will strip the attributes from the coordinate vars due to a netcdf library bug
-	#the workaround is to convert to netcdf3 rename and then convert back
-
-	#ncrename -O -v ${MaccVar},${AerocomVar} -v latitude,lat -v longitude,lon -d latitude,lat -d longitude,lon ${OutFile}
 	ncrename -O -v ${MaccVar},${AerocomVar} ${OutFile}
 
-	#ncks -7 -L 5 -O ${OutFile} ${OutFile}
-	#ncks -O --exclude -v time_bnds ${OutFile} ${OutFile}
-	#if [ $? -ne 0 ]
-		#then exit 1
-	#fi
-	#set +x
 	mv "${OutFile}" "${RenamedDir}"
 
 fi
@@ -336,11 +336,9 @@ fi
 if [ ${RemoveFlag} -gt 0 ]
 	then
 	rm -f ${TempDir}/TS_${MaccVar}*.nc 
-	rm -f ${TempDir}/Day_${MaccVar}*.nc 
-	rm -f ${TempDir}/${prototype} 
-	rm -f ${TempDir}/${StartYear}*_${MaccVar}_???.nc
-	rm -f ${TempDir}/${StartYear}*_${MaccVar}_daily.nc
-	rm -f ${NcwaFile} ${NcecatFile} ${rmfile} ${cdoFile} ${ncksFile} ${ncattedFile} ${ncap2File} ${ncwaLateFile} ${SortTempFile}
+	rm -f ${DailyCacheDir}/Day_${MaccVar}*.nc 
+	rm -f ${prototype} 
+	rm -f ${NcwaFile} ${NcecatFile} ${cdoFile} ${ncksFile} ${ncattedFile} ${ncap2File} ${ncap2LateFile} ${ncwaLateFile} ${SortTempFile}
 fi	
 
 date=`date`
