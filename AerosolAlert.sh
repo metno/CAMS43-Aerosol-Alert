@@ -115,7 +115,9 @@ if [ ${StartAerocomToolsFlag} -gt 0 ]
 	#use the automation tools to start plotting
 	module add aerocom-IDL/8.5.1
 	module add aerocom/anaconda3-stable
-	/home/jang/bin/aerocom-tool-automation.py --modelyear ${StartYear} -v --forecast -v ${Model}
+	module add aerocom/aerocom-tools4all
+	#/home/jang/bin/aerocom-tool-automation.py --modelyear ${StartYear} -v --forecast -v ${Model}
+	/modules/xenial/user-apps/aerocom/aerocom-tools4all/aerocom-tool-automation/bin/aerocom-tool-automation.py --modelyear ${StartYear} -v --forecast -v ${Model}
 fi
 
 IFS=$SAVEIFS
