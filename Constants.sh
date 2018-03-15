@@ -183,7 +183,10 @@ StartCalculateAlertFlag=1
 #StartCalculateAlertFlag=0
 
 #Start plotting using the aerocom-tools?
-AEROCOMWORKDIR=/home/jang/data/aerocom-tools/
+if [ -z ${AEROCOMWORKDIR} ]
+   then
+	export AEROCOMWORKDIR=/home/jang/data/aerocom-tools/
+fi
 StartAerocomToolsFlag=0
 StartAerocomToolsFlag=1
 #echo "PATH: ${PATH}"
