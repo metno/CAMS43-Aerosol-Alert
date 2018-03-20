@@ -321,11 +321,15 @@ if [ ${Stage3Flag} -gt 0 ]
 	set -x
 	OutFile="${TempDir}/${Start}.${Model}.daily.${AerocomVar}.${StartYear}.nc"
 	StartFile="${TempDir}/TS_${MaccVar}_00001.nc"
-	ncecat -7 -x -v time_bnds -O -u time -n ${i_DayNo},5,1 ${StartFile} ${OutFile}
+	ncecat -7 -O -u time -n ${i_DayNo},5,1 ${StartFile} ${OutFile}
 	if [ $? -ne 0 ]
 		then exit 1
 	fi
 	ncrename -O -v ${MaccVar},${AerocomVar} ${OutFile}
+	#remove the time_bnds variable 
+	ncatted -a bounds,time,d,, ${OutFile}
+	ncks -7 -O -o  ${OutFile} -x -v time_bnds ${OutFile}
+
 
 	mv "${OutFile}" "${RenamedDir}"
 

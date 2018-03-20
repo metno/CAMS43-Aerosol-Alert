@@ -198,6 +198,9 @@ if true ; then	#block switched off for debugging
 	ncrename -O -v ${MaccVar},${AerocomVar} ${OutFile}
 
 	#ncks -7 -L 5 -O ${OutFile} ${OutFile}
+	ncatted -a bounds,time,d,, ${OutFile}
+	ncks -7 -O -o  ${OutFile} -x -v time_bnds ${OutFile}
+
 	#ncks -O --exclude -v time_bnds ${OutFile} ${OutFile}
 	#if [ $? -ne 0 ]
 		#then exit 1
