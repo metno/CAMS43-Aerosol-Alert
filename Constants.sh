@@ -67,9 +67,6 @@ FCModelPath="${BasePath}aerocom1/${Model}/"
 #By convention the model data resides in a directory named 'renamed'
 RenamedDir="${FCModelPath}renamed/"
 
-#for backward compatibility
-aerocom1="${FCModelPath}"
-
 #directory to download the files from ECMWF to
 DownloadDir="${FCModelPath}download/"
 
