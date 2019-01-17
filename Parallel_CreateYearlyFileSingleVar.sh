@@ -41,7 +41,7 @@ echo "$*" started at ${date}
 set -x
 echo ${CAMS43AlertHome}
 if [ -z ${CAMS43AlertHome} ]
-	then . /home/aerocom/bin/Constants.sh
+	then . /home/aerocom/lib/CAMS43-Aerosol-Alert/Constants.sh
 else
 	. "${CAMS43AlertHome}/Constants.sh"
 fi
@@ -279,10 +279,11 @@ if [ ${Stage3Flag} -gt 0 ]
 	cp ${DayFile} ${prototype}
 	#determine Fillvalue
 	#FillValue=`ncks -m -v ${MaccVar} ${prototype} | grep ${MaccVar} | grep _FillValue | cut '-d ' -f 11`
+	set -x
 	FillValue=`${NCKS[*]} -m -v ${MaccVar} ${prototype} | grep ${MaccVar} | grep _FillValue | cut '-d ' -f 11`
-	#temp="${MaccVar}(:,:)=${FillValue}"
+	temp="${MaccVar}(:,:)=${FillValue}"
 	#temp="${MaccVar}(:,:)=0./0."
-	temp="${MaccVar}(:,:)=nan"
+	#temp="${MaccVar}(:,:)=nan"
 	set -x
 	ncap2 -7 -o ${prototype} -O -s "${temp}" ${prototype}
 	if [ $? -ne 0 ]
@@ -329,6 +330,7 @@ if [ ${Stage3Flag} -gt 0 ]
 	#remove the time_bnds variable 
 	ncatted -a bounds,time,d,, ${OutFile}
 	ncks -7 -O -o  ${OutFile} -x -v time_bnds ${OutFile}
+	#ncks -3 -O -o  ${OutFile} -x -v time_bnds ${OutFile}
 
 
 	mv "${OutFile}" "${RenamedDir}"
