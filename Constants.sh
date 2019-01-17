@@ -4,14 +4,18 @@
 #you need to set the RUN_BY_CRON environment variable
 if [ -n ${RUN_BY_CRON} ]
 	then
-	PATH="/modules/xenial/user-apps/aerocom/anaconda3-testing/bin/:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+	#PATH="/modules/xenial/user-apps/aerocom/anaconda3-testing/bin/:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+	PATH="/modules/xenial/user-apps/aerocom/anaconda3-aeolus/bin/:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 	CAMS43AlertHome="/home/aerocom/lib/CAMS43-Aerosol-Alert/"
 fi
 
 if [ -z ${CAMS43AlertHome} ]
 	then 
-	CAMS43AlertHome="/home/aerocom/bin/"
+	CAMS43AlertHome="/home/aerocom/lib/CAMS43-Aerosol-Alert/"
 fi
+
+
+#module load aerocom/anaconda-aeolus
 
 #in a cluster we need also the hostname for temporary files
 Hostname=`hostname`
@@ -25,7 +29,7 @@ SlotsToUse=8
 #in some scripts we search only a certain number of days back for new data
 #(e.g. in Interpolate.sh) to save time
 #this is the number of days to search back
-MaxDaysToSearchForData=3
+MaxDaysToSearchForData=30
 
 CredentialFile="${CAMS43AlertHome}/FtpCredentials.sh"
 if [ -f ${CredentialFile} ]
