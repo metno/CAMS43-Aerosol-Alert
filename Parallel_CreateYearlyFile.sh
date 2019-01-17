@@ -12,8 +12,7 @@ IFS=$(echo -en "\n\b")
 #load constants
 #set -x
 if [ -z ${CAMS43AlertHome} ]
-	then . /home/aerocom/bin/Constants.sh
-	CAMS43AlertHome=' /home/aerocom/bin/'
+	then . /home/aerocom/lib/CAMS43-Aerosol-Alert/Constants.sh
 else
 	. "${CAMS43AlertHome}/Constants.sh"
 fi
@@ -53,17 +52,21 @@ vars=(
 'od550bc'
 )
 AerocomVar='od550aer'
+
 for NewVar in ${vars[*]}
 	do InFile="${RenamedDir}/${Start}.${Model}.daily.${NewVar}.${StartYear}.nc"
 	OutFile="${TempDir}/${Start}.${Model}.daily.${AerocomVar}.${StartYear}.nc"
+	ncks -3 -O -o ${OutFile} ${OutFile}
 	set -x
-	ncks -7 -o ${OutFile} -A -v ${NewVar} ${InFile}
+	#ncks -7 -o ${OutFile} -A -v ${NewVar} ${InFile}
+	ncks -3 -o ${OutFile} -A -v ${NewVar} ${InFile}
 	if [ $? -ne 0 ]
 		then exit 1
 	fi
 done
 temp="${AerocomVar}=od550dust+od550so4+od550oa+od550bc"
 ncap2 -7 -o ${OutFile} -O -s "${temp}" ${OutFile}
+#ncap2 -3 -o ${OutFile} -O -s "${temp}" ${OutFile}
 if [ $? -ne 0 ]
 	then exit 1
 fi
@@ -85,13 +88,15 @@ rm -f ${OutFile}
 for NewVar in ${vars[*]}
 	do InFile="${RenamedDir}/${Start}.${Model}.daily.${NewVar}.${StartYear}.nc"
 	OutFile="${TempDir}/${Start}.${Model}.daily.${AerocomVar}.${StartYear}.nc"
-	ncks -7 -o ${OutFile} -A -v ${NewVar} ${InFile}
+	#ncks -7 -o ${OutFile} -A -v ${NewVar} ${InFile}
+	ncks -3 -O -o ${OutFile} -A -v ${NewVar} ${InFile}
 	if [ $? -ne 0 ]
 		then exit 1
 	fi
 done
 temp="${AerocomVar}=od550so4+od550oa+od550bc"
 ncap2 -7 -o ${OutFile} -O -s "${temp}" ${OutFile}
+#ncap2 -3 -o ${OutFile} -O -s "${temp}" ${OutFile}
 if [ $? -ne 0 ]
 	then exit 1
 fi
