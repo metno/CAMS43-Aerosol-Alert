@@ -9,7 +9,7 @@ IFS=$(echo -en "\n\b")
 set -x
 echo ${CAMS43AlertHome}
 if [ -z ${CAMS43AlertHome} ]
-   then . /home/aerocom/bin/Constants.sh
+   then . /home/aerocom/lib/CAMS43-Aerosol-Alert/Constants.sh
 else
    . "${CAMS43AlertHome}/Constants.sh"
 fi
@@ -23,26 +23,26 @@ read -r -d '' NCOProt <<'EOF'
 *aodalert2=od550aer(:,:,:);
 *aodalert1=od550aer(:,:,:);
 *alertaer=od550aer(:,:,:);
-aodalert2(:,:,:)=0;
-aodalert1(:,:,:)=0;
 alertaer(:,:,:)=0;
 where(od550aer_anomaly(:,:,:)>2.){
-aodalert1(:,:,:)=1.;
+alertaer=1.;
 }
 where(od550aer_anomaly(:,:,:)>3.){
-aodalert1(:,:,:)=2.;
+alertaer=2.;
 }
 where(od550aer_anomaly(:,:,:)>5.){
-aodalert1(:,:,:)=3.;
+alertaer=3.;
 }
-where(od550aer(:,:,:)>0.50){
-aodalert2(:,:,:)=1.;
-}
-alertaer=aodalert1*aodalert2;
 alertaer.ram_write();
 od550aer_anomaly.ram_write();
 
 EOF
+#aodalert2(:,:,:)=0;
+#aodalert1(:,:,:)=0;
+#alertaer=aodalert1*aodalert2;
+#where(od550aer(:,:,:)>0.50){
+#aodalert2(:,:,:)=1.;
+#}
 
 set -x
 for ModelVar in ${varlist[*]}
