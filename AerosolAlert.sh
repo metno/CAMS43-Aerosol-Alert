@@ -29,6 +29,11 @@
 SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
 
+cmd=`basename ${0} | rev | cut -d. -f2- | rev`
+. /home/aerocom/bin/CronInclude.sh
+LogFile="${CronLogDir}/${cmd}_${date}.log"
+echo "${0} started ${date}" >> ${LogFile}
+
 #load constants
 set -x
 echo ${CAMS43AlertHome}
@@ -117,7 +122,10 @@ if [ ${StartAerocomToolsFlag} -gt 0 ]
 	module add aerocom/anaconda3-stable
 	module add aerocom/aerocom-tools4all
 	#/home/jang/bin/aerocom-tool-automation.py --modelyear ${StartYear} -v --forecast -v ${Model}
-	/modules/xenial/user-apps/aerocom/aerocom-tools4all/aerocom-tool-automation/bin/aerocom-tool-automation.py --modelyear ${StartYear} -v --forecast -v ${Model}
+	/modules/xenial/user-apps/aerocom/aerocom-tools4all/aerocom-tool-automation/bin/aerocom-tool-automation.py --modelyear ${StartYear} -v --numcpu 4 --forecast -v ${Model}
 fi
+date=`/bin/date +%Y%m%d%H%M%S`
+echo "ended ${date}" >> ${LogFile}
+
 
 IFS=$SAVEIFS
