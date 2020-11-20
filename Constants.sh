@@ -5,7 +5,7 @@
 if [ -n ${RUN_BY_CRON} ]
 	then
 	#PATH="/modules/xenial/user-apps/aerocom/anaconda3-testing/bin/:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-	PATH="/modules/xenial/user-apps/aerocom/anaconda3-aeolus/bin/:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+	PATH="/modules/xenial/user-apps/aerocom/anaconda-aeolus/bin/:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 	CAMS43AlertHome="/home/aerocom/lib/CAMS43-Aerosol-Alert/"
 fi
 
@@ -19,6 +19,8 @@ fi
 
 #in a cluster we need also the hostname for temporary files
 Hostname=`hostname`
+
+PARALLEL='/modules/xenial/user-apps/aerocom/anaconda-aeolus/bin/parallel'
 
 #of jobs to run in parallel at max
 #e.g. for ncwa loops
@@ -53,6 +55,7 @@ varlist=(
 'od550oa=omaod550=NotNeeded'
 'od550bc=bcaod550=NotNeeded'
 'od550so4=suaod550=NotNeeded'
+'concpm10=pm10=NotNeeded'
 )
 
 #Some directories
