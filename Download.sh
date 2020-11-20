@@ -32,6 +32,8 @@ wget --ftp-user=${ftpuser} --ftp-password=${ftppass} --append-output="${logfile}
 wget --ftp-user=${ftpuser} --ftp-password=${ftppass} --append-output="${logfile}.bcaod550" -N -r -l 8 --no-remove-listing -nH --cut-dirs=2 -A _bcaod550.nc ${DownloadURL} &
 wget --ftp-user=${ftpuser} --ftp-password=${ftppass} --append-output="${logfile}.suaod550" -N -r -l 8 --no-remove-listing -nH --cut-dirs=2 -A _suaod550.nc ${DownloadURL} &
 wget --ftp-user=${ftpuser} --ftp-password=${ftppass} --append-output="${logfile}.duaod550" -N -r -l 8 --no-remove-listing -nH --cut-dirs=2 -A _duaod550.nc ${DownloadURL} &
+wget --ftp-user=${ftpuser} --ftp-password=${ftppass} --append-output="${logfile}.pm10" -N -r -l 8 --no-remove-listing -nH --cut-dirs=2 -A _pm10.nc ${DownloadURL} &
+wget --ftp-user=${ftpuser} --ftp-password=${ftppass} --append-output="${logfile}.pm2p5" -N -r -l 8 --no-remove-listing -nH --cut-dirs=2 -A _pm2p5.nc ${DownloadURL} &
 wait
 date=`date +%Y%m%d%H%M%S`
 echo "ended at ${date}" >> "${logfile}"
