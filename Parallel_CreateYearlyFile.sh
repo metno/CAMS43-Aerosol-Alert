@@ -53,10 +53,14 @@ vars=(
 )
 AerocomVar='od550aer'
 
+OutFile="${TempDir}/${Start}.${Model}.daily.${AerocomVar}.${StartYear}.nc"
+if [ -f ${OutFile} ]
+then
+	ncks -3 -O -o ${OutFile} ${OutFile}
+fi
 for NewVar in ${vars[*]}
 	do InFile="${RenamedDir}/${Start}.${Model}.daily.${NewVar}.${StartYear}.nc"
 	OutFile="${TempDir}/${Start}.${Model}.daily.${AerocomVar}.${StartYear}.nc"
-	ncks -3 -O -o ${OutFile} ${OutFile}
 	set -x
 	#ncks -7 -o ${OutFile} -A -v ${NewVar} ${InFile}
 	ncks -3 -o ${OutFile} -A -v ${NewVar} ${InFile}
@@ -89,7 +93,7 @@ for NewVar in ${vars[*]}
 	do InFile="${RenamedDir}/${Start}.${Model}.daily.${NewVar}.${StartYear}.nc"
 	OutFile="${TempDir}/${Start}.${Model}.daily.${AerocomVar}.${StartYear}.nc"
 	#ncks -7 -o ${OutFile} -A -v ${NewVar} ${InFile}
-	ncks -3 -O -o ${OutFile} -A -v ${NewVar} ${InFile}
+	ncks -3 -o ${OutFile} -A -v ${NewVar} ${InFile}
 	if [ $? -ne 0 ]
 		then exit 1
 	fi

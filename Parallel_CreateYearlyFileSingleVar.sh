@@ -145,23 +145,23 @@ if [ ${Stage1Flag} -gt 0 ]
 		set -x
 		WaitForFile "${NcwaFile}"
 		echo Starting parallel for ncwa...
-		/usr/bin/parallel --version
-		#printf "%s\n" "${NcwaList[@]}" | /usr/bin/parallel --verbose -j ${SlotsToUse}
-		/usr/bin/parallel -vk -j ${SlotsToUse} -a "${NcwaFile}"
+		${PARALLEL} --version
+		#printf "%s\n" "${NcwaList[@]}" | ${PARALLEL} --verbose -j ${SlotsToUse}
+		${PARALLEL} -vk -j ${SlotsToUse} -a "${NcwaFile}"
 		set +x
 		wait
 
 		WaitForFile "${NcecatFile}"
 		echo Starting parallel for ncecat...
 		#printf "%s\n" "${NcecatList[@]}" | parallel -j ${SlotsToUse} -v
-		/usr/bin/parallel -vk -j ${SlotsToUse} -a "${NcecatFile}"
+		${PARALLEL} -vk -j ${SlotsToUse} -a "${NcecatFile}"
 		wait
 
 		WaitForFile "${cdoFile}"
 		echo Starting parallel for cdo...
 		#printf "%s\n" "${cdoList[@]}" | parallel -j ${SlotsToUse} -v
-		#/usr/bin/parallel --verbose -j ${SlotsToUse} < "${cdoFile}"
-		/usr/bin/parallel -vk -j ${SlotsToUse} -a "${cdoFile}"
+		#${PARALLEL} --verbose -j ${SlotsToUse} < "${cdoFile}"
+		${PARALLEL} -vk -j ${SlotsToUse} -a "${cdoFile}"
 		wait
 
 		unset NcwaList NcecatList cdoList
@@ -235,7 +235,7 @@ if [ ${Stage2Flag} -gt 0 ]
 	sort -r "${ncksFile}" > "${SortTempFile}"
 	WaitForFile "${SortTempFile}"
 	mv "${SortTempFile}" "${ncksFile}"
-	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${ncksFile}"
+	${PARALLEL} -vk -j ${SlotsToUse} -a "${ncksFile}"
 	#SAVEIFS=$IFS
 	#IFS=$'\n' ncksList=($(sort <<<"${ncksList[*]}"))
 	#IFS=$SAVEIFS
@@ -247,21 +247,21 @@ if [ ${Stage2Flag} -gt 0 ]
 	WaitForFile "${ncattedFile}"
 	sort -u "${ncattedFile}" > "${SortTempFile}"
 	WaitForFile "${SortTempFile}"
-	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${SortTempFile}"
+	${PARALLEL} -vk -j ${SlotsToUse} -a "${SortTempFile}"
 	wait
 
 	echo Starting parallel for ncap2...
 	WaitForFile "${ncap2File}"
 	sort -u "${ncap2File}" > "${SortTempFile}"
 	WaitForFile "${SortTempFile}"
-	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${SortTempFile}"
+	${PARALLEL} -vk -j ${SlotsToUse} -a "${SortTempFile}"
 	wait
 
 	echo Starting parallel for ncwa...
 	WaitForFile "${ncwaLateFile}"
 	sort -u "${ncwaLateFile}" > "${SortTempFile}"
 	WaitForFile "${SortTempFile}"
-	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${SortTempFile}"
+	${PARALLEL} -vk -j ${SlotsToUse} -a "${SortTempFile}"
 	wait
 	unset  ncksList ncattedList ncap2List ncwaLateList
 fi
@@ -315,7 +315,7 @@ if [ ${Stage3Flag} -gt 0 ]
 	done
 	echo Starting parallel for ncap2Late...
 	WaitForFile "${ncap2LateFile}"
-	/usr/bin/parallel -vk -j ${SlotsToUse} -a "${ncap2LateFile}"
+	${PARALLEL} -vk -j ${SlotsToUse} -a "${ncap2LateFile}"
 	wait
 
 	#concatenate to yearly file
