@@ -56,6 +56,7 @@ varlist=(
 'od550bc=bcaod550=NotNeeded'
 'od550so4=suaod550=NotNeeded'
 'concpm10=pm10=NotNeeded'
+'concpm25=pm2p5=NotNeeded'
 )
 
 #Some directories
