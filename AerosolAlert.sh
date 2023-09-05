@@ -118,11 +118,12 @@ wait
 if [ ${StartAerocomToolsFlag} -gt 0 ]
 	then
 	#use the automation tools to start plotting
-	module add aerocom-IDL/8.5.1
-	module add aerocom/anaconda3-stable
+	#module add aerocom-IDL/8.5.1
+	#ermodule add aerocom/anaconda3-stable
 	module add aerocom/aerocom-tools4all
 	#/home/jang/bin/aerocom-tool-automation.py --modelyear ${StartYear} -v --forecast -v ${Model}
-	/modules/xenial/user-apps/aerocom/aerocom-tools4all/aerocom-tool-automation/bin/aerocom-tool-automation.py --modelyear ${StartYear} -v --numcpu 4 --forecast -v ${Model}
+	#/modules/xenial/user-apps/aerocom/aerocom-tools4all/aerocom-tool-automation/bin/aerocom-tool-automation.py --modelyear ${StartYear} -v --numcpu 4 --forecast -v ${Model}
+	/modules/centos7/user-apps/aerocom/aerocom-tools4all/aerocom-tool-automation/bin/aerocom-tool-automation.py --modelyear ${StartYear} -v --numcpu 4 --forecast -v ${Model}
 fi
 date=`/bin/date +%Y%m%d%H%M%S`
 echo "ended ${date}" >> ${LogFile}

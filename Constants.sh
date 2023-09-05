@@ -5,7 +5,7 @@
 if [ -n ${RUN_BY_CRON} ]
 	then
 	#PATH="/modules/xenial/user-apps/aerocom/anaconda3-testing/bin/:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-	PATH="/modules/xenial/user-apps/aerocom/anaconda-aeolus/bin/:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+	PATH="/modules/centos7/user-apps/aerocom/anaconda3/bin:/modules/centos7/user-apps/aerocom/anaconda3/condabin:${PATH}:/home/jang/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 	CAMS43AlertHome="/home/aerocom/lib/CAMS43-Aerosol-Alert/"
 fi
 
@@ -21,6 +21,7 @@ fi
 Hostname=`hostname`
 
 PARALLEL='/modules/xenial/user-apps/aerocom/anaconda-aeolus/bin/parallel'
+PARALLEL='/modules/centos7/user-apps/aerocom/anaconda3/bin/parallel'
 
 #of jobs to run in parallel at max
 #e.g. for ncwa loops
@@ -193,7 +194,7 @@ if [ -z ${AEROCOMWORKDIR} ]
 	export AEROCOMWORKDIR=/home/jang/data/aerocom-tools/
 fi
 StartAerocomToolsFlag=0
-StartAerocomToolsFlag=1
+#StartAerocomToolsFlag=1
 #echo "PATH: ${PATH}"
 
 

@@ -15,8 +15,9 @@ fi
 set +x
 
 #URL to the ECMWF files
-DownloadURL='ftp://ftp.ecmwf.int/pub/macc/nrt/aod/netcdf/'
-DownloadURL='ftp://dissemination.ecmwf.int/DATA/CAMS_NREALTIME/'
+#DownloadURL='ftp://ftp.ecmwf.int/pub/macc/nrt/aod/netcdf/'
+#DownloadURL='ftp://dissemination.ecmwf.int/DATA/CAMS_NREALTIME/'
+DownloadURL='ftp://aux.ecmwf.int/DATA/CAMS_NREALTIME/'
 
 echo "Downloading new files from ECMWF..."
 cd "${DownloadDir}"
